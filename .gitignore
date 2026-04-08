@@ -10,6 +10,8 @@ target/
 # Logs and temp files
 *.log
 *.tmp
+*.swp
+*.swo
 
 # Environment
 .env
@@ -19,29 +21,17 @@ target/
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-venv/
-.venv/
-.env/
+# System files
+.DS_Store
+Thumbs.db
 
-# Compiled files
-*.o
-*.obj
-*.exe
-*.dll
-*.so
-*.a
-*.out
+# Coverage
+coverage/
+htmlcov/
+.coverage
 
-# Compression
+# Compressed files
 *.zip
 *.gz
 *.tar
@@ -64,18 +54,4 @@ venv/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-
-# System
-.DS_Store
-Thumbs.db
-
-# Testing
-.coverage
-coverage/
-htmlcov/
-.mypy_cache/
-.pytest_cache/
-
-# Gradle
-.gradle/
 ```
