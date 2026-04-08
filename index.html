@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="description" content="QUANT OS - Professional Trading Operating System">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="QUANT OS">
+    <title>QUANT OS</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%236366f1' width='100' height='100' rx='20'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white' font-family='Arial'>Q</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%236366f1' width='100' height='100' rx='20'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white' font-family='Arial'>Q</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                        accent: '#06b6d4',
+                        dark: '#0a0a0f',
+                        darker: '#050508',
+                        card: 'rgba(255, 255, 255, 0.05)',
+                        'card-hover': 'rgba(255, 255, 255, 0.08)',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        warning: '#f59e0b'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0a0a0f 100%);
+            min-height: 100vh;
+            color: #e4e4e7;
+            overflow-x: hidden;
+        }
+        
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+        }
+        
+        .glass-strong {
+            background: rgba(15, 15, 25, 0.9);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .glass-card:hover {
+            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%);
+            border-color: rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 30px rgba(99, 102, 241, 0.1);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.7);
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.5); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        
+        /* Tab transitions */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        /* Input styles */
+        .input-field {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* Button styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: #e4e4e7;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+        
+        /* Floating button */
+        .fab {
+            position: fixed;
+            bottom: 100px;
+            right: 24px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.5);
+            transition: all 0.3s;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.6);
+        }
+        
+        /* Navigation */
+        .nav-item {
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+        }
+        
+        .nav-item:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-item.active {
+            color: #fff;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        
+        /* Stat card */
+        .stat-card {
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .stat-label {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Trade card */
+        .trade-card {
+            padding: 16px;
+            cursor: pointer;
+        }
+        
+        .trade-card.buy {
+            border-left: 3px solid #10b981;
+        }
+        
+        .trade-card.sell {
+            border-left: 3px solid #ef4444;
+        }
+        
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-buy {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .badge-sell {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .badge-closed {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .badge-active {
+            background: rgba(99, 102, 241, 0.2);
+            color: #6366f1;
+        }
+        
+        /* Tag input */
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        
+        .tag {
+            background: rgba(99, 102, 241, 0.2);
+            color: #6366f1;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .tag-remove {
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .tag-remove:hover {
+            opacity: 1;
+        }
+        
+        /* Warning banner */
+        .warning-banner {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #f59e0b;
+        }
+        
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .fab {
+                bottom: 90px;
+                right: 16px;
+                width: 56px;
+                height: 56px;
+                font-size: 24px;
+            }
+            
+            .stat-value {
+                font-size: 22px;
+            }
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Dynamic field row */
+        .dynamic-field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        /* Partial close item */
+        .partial-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="glass sticky top-0 z-50 px-4 py-3 mb-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold text-white text-lg">Q</div>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">QUANT OS</h1>
+            </div>
+            <div class="hidden md:flex items-center gap-2">
+                <div class="nav-item active" data-tab="dashboard">Dashboard</div>
+                <div class="nav-item" data-tab="journal">Journal</div>
+                <div class="nav-item" data-tab="portfolio">Portfolio</div>
+                <div class="nav-item" data-tab="analytics">Analytics</div>
+            </div>
+            <button id="settingsBtn" class="btn-secondary p-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </button>
+        </div>
+        <!-- Mobile nav -->
+        <div class="md:hidden flex justify-center gap-2 mt-3 overflow-x-auto pb-2">
+            <div class="nav-item active whitespace-nowrap" data-tab="dashboard">Dashboard</div>
+            <div class="nav-item whitespace-nowrap" data-tab="journal">Journal</div>
+            <div class="nav-item whitespace-nowrap" data-tab="portfolio">Portfolio</div>
+            <div class="nav-item whitespace-nowrap" data-tab="analytics">Analytics</div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 pb-24">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active animate-fade-in">
+            <!-- Warnings -->
+            <div id="warningsContainer" class="mb-6 space-y-3"></div>
+            
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Total Balance</div>
+                    <div class="stat-value text-primary" id="totalBalance">$0.00</div>
+                </div>
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Equity</div>
+                    <div class="stat-value text-accent" id="totalEquity">$0.00</div>
+                </div>
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Win Rate</div>
+                    <div class="stat-value text-success" id="winRate">0%</div>
+                </div>
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Total Trades</div>
+                    <div class="stat-value" id="totalTrades">0</div>
+                </div>
+            </div>
+            
+            <!-- Secondary Stats -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Active Trades</div>
+                    <div class="stat-value text-warning" id="activeTrades">0</div>
+                </div>
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Net Profit</div>
+                    <div class="stat-value" id="netProfit">$0.00</div>
+                </div>
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Avg R:R</div>
+                    <div class="stat-value" id="avgRR">0.00</div>
+                </div>
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Total Risk</div>
+                    <div class="stat-value text-danger" id="totalRisk">0%</div>
+                </div>
+            </div>
+            
+            <!-- Equity Curve -->
+            <div class="glass-card p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4">Equity Curve</h3>
+                <div class="chart-container" id="equityChart"></div>
+            </div>
+            
+            <!-- Recent Trades -->
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Recent Trades</h3>
+                    <button class="btn-secondary text-sm" onclick="app.navigate('journal')">View All</button>
+                </div>
+                <div id="recentTradesList" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- Journal Tab -->
+        <div id="journal" class="tab-content animate-fade-in">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold">Trade Journal</h2>
+                <div class="flex gap-2">
+                    <button class="btn-secondary" onclick="app.exportData()">Export</button>
+                    <button class="btn-secondary" onclick="document.getElementById('importFile').click()">Import</button>
+                    <input type="file" id="importFile" accept=".json" style="display:none" onchange="app.importData(this)">
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="glass-card p-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" class="input-field" id="filterPair" placeholder="Filter by pair...">
+                    <select class="input-field" id="filterDirection">
+                        <option value="">All Directions</option>
+                        <option value="buy">Buy</option>
+                        <option value="sell">Sell</option>
+                    </select>
+                    <select class="input-field" id="filterStatus">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                    <button class="btn-primary" onclick="app.renderTrades()">Apply Filters</button>
+                </div>
+            </div>
+            
+            <!-- Trades List -->
+            <div id="tradesList" class="space-y-4"></div>
+        </div>
+
+        <!-- Portfolio Tab -->
+        <div id="portfolio" class="tab-content animate-fade-in">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold">Portfolio</h2>
+                <button class="btn-primary" onclick="app.openAccountModal()">+ Add Account</button>
+            </div>
+            
+            <!-- Accounts Grid -->
+            <div id="accountsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"></div>
+            
+            <!-- Currency Exposure -->
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-semibold mb-4">Currency Exposure</h3>
+                <div id="currencyExposure" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content animate-fade-in">
+            <h2 class="text-2xl font-bold mb-6">Analytics</h2>
+            
+            <!-- Performance Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Performance Summary</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Total Trades</span>
+                            <span class="font-mono" id="analyticsTotalTrades">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Winning Trades</span>
+                            <span class="font-mono text-success" id="analyticsWinningTrades">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Losing Trades</span>
+                            <span class="font-mono text-danger" id="analyticsLosingTrades">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Win Rate</span>
+                            <span class="font-mono text-success" id="analyticsWinRate">0%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Profit Factor</span>
+                            <span class="font-mono" id="analyticsProfitFactor">0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Avg Win</span>
+                            <span class="font-mono text-success" id="analyticsAvgWin">$0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Avg Loss</span>
+                            <span class="font-mono text-danger" id="analyticsAvgLoss">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Risk Metrics</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Avg R:R</span>
+                            <span class="font-mono" id="analyticsAvgRR">0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Best Trade</span>
+                            <span class="font-mono text-success" id="analyticsBestTrade">$0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Worst Trade</span>
+                            <span class="font-mono text-danger" id="analyticsWorstTrade">$0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Avg Risk %</span>
+                            <span class="font-mono" id="analyticsAvgRisk">0.00%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Max Drawdown</span>
+                            <span class="font-mono text-danger" id="analyticsMaxDrawdown">0.00%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Dynamic Analysis</h3>
+                    <div id="dynamicAnalysis" class="space-y-3"></div>
+                </div>
+            </div>
+            
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Profit by Strategy</h3>
+                    <div id="profitByStrategy" class="space-y-3"></div>
+                </div>
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Profit by Session</h3>
+                    <div id="profitBySession" class="space-y-3"></div>
+                </div>
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Profit by Pair</h3>
+                    <div id="profitByPair" class="space-y-3"></div>
+                </div>
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Monthly Performance</h3>
+                    <div id="monthlyPerformance" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="app.openTradeModal()" title="Add Trade">+</button>
+
+    <!-- Trade Modal -->
+    <div class="modal-overlay" id="tradeModal">
+        <div class="glass-strong modal-content rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold" id="tradeModalTitle">Add Trade</h3>
+                <button class="text-gray-400 hover:text-white" onclick="app.closeTradeModal()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="tradeForm" class="space-y-4">
+                <input type="hidden" id="tradeId">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Pair *</label>
+                        <input type="text" class="input-field" id="pair" placeholder="EURUSD" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Direction *</label>
+                        <select class="input-field" id="direction" required>
+                            <option value="buy">Buy</option>
+                            <option value="sell">Sell</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Entry Price *</label>
+                        <input type="number" step="0.00001" class="input-field" id="entryPrice" placeholder="1.0850" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Stop Loss</label>
+                        <input type="number" step="0.00001" class="input-field" id="stopLoss" placeholder="1.0800">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Take Profit</label>
+                        <input type="number" step="0.00001" class="input-field" id="takeProfit" placeholder="1.0950">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Lot Size *</label>
+                        <input type="number" step="0.01" class="input-field" id="lotSize" placeholder="1.0" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Account *</label>
+                    <select class="input-field" id="accountId" required></select>
+                </div>
+                
+                <!-- Dynamic Metadata Fields -->
+                <div class="border-t border-gray-700 pt-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="block text-sm text-gray-400">Metadata (Strategy, Session, etc.)</label>
+                        <button type="button" class="text-xs text-primary hover:text-secondary" onclick="app.addDynamicField()">+ Add Field</button>
+                    </div>
+                    <div id="dynamicFields" class="space-y-3"></div>
+                </div>
+                
+                <!-- Tags -->
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Tags</label>
+                    <div class="flex gap-2">
+                        <input type="text" class="input-field flex-1" id="tagInput" placeholder="Add tag and press Enter">
+                    </div>
+                    <div class="tag-container" id="tagsContainer"></div>
+                </div>
+                
+                <!-- Notes -->
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Notes</label>
+                    <textarea class="input-field" id="notes" rows="3" placeholder="Trade notes, observations..."></textarea>
+                </div>
+                
+                <!-- Partials -->
+                <div class="border-t border-gray-700 pt-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="block text-sm text-gray-400">Partial Closes</label>
+                        <button type="button" class="text-xs text-primary hover:text-secondary" onclick="app.addPartialField()">+ Add Partial</button>
+                    </div>
+                    <div id="partialsContainer" class="space-y-2"></div>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="button" class="btn-secondary flex-1" onclick="app.closeTradeModal()">Cancel</button>
+                    <button type="submit" class="btn-primary flex-1">Save Trade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Account Modal -->
+    <div class="modal-overlay" id="accountModal">
+        <div class="glass-strong modal-content rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold" id="accountModalTitle">Add Account</h3>
+                <button class="text-gray-400 hover:text-white" onclick="app.closeAccountModal()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="accountForm" class="space-y-4">
+                <input type="hidden" id="accountIdEdit">
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Account Name *</label>
+                    <input type="text" class="input-field" id="accountName" placeholder="Main Account" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Initial Balance *</label>
+                    <input type="number" step="0.01" class="input-field" id="accountBalance" placeholder="10000" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Currency</label>
+                    <input type="text" class="input-field" id="accountCurrency" placeholder="USD" value="USD">
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="button" class="btn-secondary flex-1" onclick="app.closeAccountModal()">Cancel</button>
+                    <button type="submit" class="btn-primary flex-1">Save Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="glass-strong modal-content rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold">Settings</h3>
+                <button class="text-gray-400 hover:text-white" onclick="app.closeSettingsModal()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Max Risk Per Trade (%)</label>
+                    <input type="number" step="0.1" class="input-field" id="maxRiskPerTrade" value="2">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Max Total Risk (%)</label>
+                    <input type="number" step="0.1" class="input-field" id="maxTotalRisk" value="6">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Default Lot Size</label>
+                    <input type="number" step="0.01" class="input-field" id="defaultLotSize" value="1.0">
+                </div>
+                
+                <div class="pt-4">
+                    <button class="btn-primary w-full" onclick="app.saveSettings()">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trade Detail Modal -->
+    <div class="modal-overlay" id="tradeDetailModal">
+        <div class="glass-strong modal-content rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold">Trade Details</h3>
+                <button class="text-gray-400 hover:text-white" onclick="app.closeTradeDetailModal()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div id="tradeDetailContent" class="space-y-4"></div>
+            
+            <div class="flex gap-3 pt-6 mt-6 border-t border-gray-700">
+                <button class="btn-secondary flex-1" onclick="app.closeTradeDetailModal()">Close</button>
+                <button class="btn-primary flex-1" id="editTradeBtn">Edit</button>
+                <button class="btn-danger flex-1" id="deleteTradeBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="modules/storage.js"></script>
+    <script src="modules/risk.js"></script>
+    <script src="modules/analytics.js"></script>
+    <script src="modules/journal.js"></script>
+    <script src="modules/portfolio.js"></script>
+    <script src="modules/ui.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
