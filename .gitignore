@@ -29,8 +29,6 @@ node_modules/
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
 # System files
 .DS_Store
@@ -76,6 +74,13 @@ hs_err_pid*
 *.exe
 
 # Compression archives
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Compressed files
 *.zip
 *.gz
 *.tar
