@@ -9,7 +9,8 @@ const DB_VERSION = 1;
 const Stores = {
     TRADES: 'trades',
     ACCOUNTS: 'accounts',
-    SETTINGS: 'settings'
+    SETTINGS: 'settings',
+    EQUITY_CURVE: 'equity_curve'
 };
 
 class Storage {
@@ -52,11 +53,19 @@ class Storage {
                 if (!db.objectStoreNames.contains(Stores.ACCOUNTS)) {
                     const accountsStore = db.createObjectStore(Stores.ACCOUNTS, { keyPath: 'id' });
                     accountsStore.createIndex('name', 'name', { unique: false });
+                    accountsStore.createIndex('type', 'type', { unique: false });
                 }
 
                 // Create settings store
                 if (!db.objectStoreNames.contains(Stores.SETTINGS)) {
                     db.createObjectStore(Stores.SETTINGS, { keyPath: 'key' });
+                }
+
+                // Create equity curve store
+                if (!db.objectStoreNames.contains(Stores.EQUITY_CURVE)) {
+                    const equityStore = db.createObjectStore(Stores.EQUITY_CURVE, { keyPath: 'id' });
+                    equityStore.createIndex('accountId', 'accountId', { unique: false });
+                    equityStore.createIndex('date', 'date', { unique: false });
                 }
             };
         });
@@ -275,6 +284,12 @@ class Storage {
             account.createdAt = new Date().toISOString();
         }
         account.updatedAt = new Date().toISOString();
+        
+        // Ensure account has type field
+        if (!account.type) {
+            account.type = 'Trading';
+        }
+        
         await this.update(Stores.ACCOUNTS, account);
         return account;
     }
@@ -290,7 +305,9 @@ class Storage {
             maxRiskPerTrade: 2,
             maxTotalRisk: 6,
             defaultLotSize: 1.0,
-            currency: 'USD'
+            currency: 'USD',
+            geminiApiKey: '',
+            selectedPairs: ['EURUSD', 'GBPUSD', 'XAUUSD']
         };
 
         const result = { ...defaults };
@@ -315,6 +332,52 @@ class Storage {
         return new Promise((resolve) => {
             transaction.oncomplete = () => resolve();
         });
+    }
+
+    // Equity Curve operations
+    async getEquityCurve(accountId) {
+        const trades = await this.getTrades();
+        const accountTrades = trades.filter(t => t.accountId === accountId);
+        
+        // Sort by timestamp
+        accountTrades.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        
+        const account = await this.getAccount(accountId);
+        const initialBalance = parseFloat(account?.balance || 10000);
+        
+        let equity = initialBalance;
+        const curveData = [{
+            date: new Date().toISOString().split('T')[0],
+            equity: initialBalance,
+            balance: initialBalance
+        }];
+        
+        accountTrades.forEach(trade => {
+            if (trade.status === 'closed' && trade.profit) {
+                equity += trade.profit;
+                curveData.push({
+                    date: new Date(trade.timestamp).toISOString().split('T')[0],
+                    equity: equity,
+                    balance: equity,
+                    profit: trade.profit
+                });
+            }
+        });
+        
+        return curveData;
+    }
+
+    async saveEquityPoint(accountId, date, equity) {
+        const equityData = {
+            id: `equity_${accountId}_${date}`,
+            accountId,
+            date,
+            equity,
+            timestamp: new Date().toISOString()
+        };
+        
+        await this.update(Stores.EQUITY_CURVE, equityData);
+        return equityData;
     }
 
     // Export/Import
@@ -369,7 +432,7 @@ class Storage {
     async clearAll() {
         await this.init();
         
-        const stores = [Stores.TRADES, Stores.ACCOUNTS, Stores.SETTINGS];
+        const stores = [Stores.TRADES, Stores.ACCOUNTS, Stores.SETTINGS, Stores.EQUITY_CURVE];
         
         for (const storeName of stores) {
             await new Promise((resolve, reject) => {
